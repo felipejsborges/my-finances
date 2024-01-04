@@ -1,0 +1,14 @@
+version: "3"
+
+
+services:
+  db:
+    image: postgres
+    restart: always
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_DB: my_finance
+      # POSTGRES_HOST_AUTH_METHOD: trust
