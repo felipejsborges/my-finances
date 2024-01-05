@@ -1,6 +1,10 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
+// after editing here
+// run `yarn prisma migrate dev` to generate and run a migration
+// and `yarn prisma generate` to update the types
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,8 +15,23 @@ datasource db {
 }
 
 model Transaction {
-  id          Int      @id @default(autoincrement())
-  description String
-  amount      Decimal
-  date        DateTime
+  id                Int           @id @default(autoincrement())
+  description       String
+  amount            Decimal
+  date              DateTime
+  paymentMethod     PaymentMethod
+  sourceDestination String
+  uniqueIdentifier  String        @unique // it's a merge of: user_id, description, amount, and date.
+  tags              Tag[] // Many-to-many relationship with Tag model
+}
+
+model Tag {
+  id           Int           @id @default(autoincrement())
+  name         String        @unique
+  transactions Transaction[] // Many-to-many relationship with Transaction model
+}
+
+enum PaymentMethod {
+  PIX
+  DEBIT
 }
