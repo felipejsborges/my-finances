@@ -68,6 +68,7 @@ export async function POST(request: NextRequest) {
 		if (Object.keys(obj).length === 0) {
 			return
 		}
+		obj.uniqueIdentifier = String(new Date().getTime()) + String(bulkData.length)
 		bulkData.push(obj)
 	})
 

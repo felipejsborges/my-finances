@@ -3,12 +3,38 @@
 import { Transaction } from '@prisma/client'
 import { useEffect, useState } from 'react'
 
+interface Filter {
+  [key: keyof Transaction]: string
+}
+
+interface Sort {
+  [key: keyof Transaction]: 'asc' | 'desc'
+}
+
 export default function Home() {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [file, setFile] = useState<File>()
+  const [search, setSearch] = useState<string>('')
+  const [filters, setFilters] = useState<Filter>({})
+  const [sort, setSort] = useState<Sort>({})
+
+  const fieldsOfATransaction = transactions.length ? Object.keys(transactions[0]) : []
+
+  function convertFiltersToQueryParams(obj: Filter) {
+    return Object.keys(obj).map(key => `${key}=${obj[key]}`).join('&')
+  }
+
+  function convertSortsObjectToQueryParams(obj: Sort) {
+    return Object.keys(obj).map(key => `${obj[key] === 'desc' ? '-' : ''}${key}`).join(',')
+  }
 
   function fetchTransactions() {
-    fetch('/api/transactions')
+    let queryParams = '?'
+    if (search) queryParams += `search=${search}&`
+    if (Object.keys(filters).length) queryParams += `${convertFiltersToQueryParams(filters)}&`
+    if (Object.keys(sort).length) queryParams += `sort=${convertSortsObjectToQueryParams(sort)}&`
+
+    fetch(`/api/transactions${queryParams}`)
       .then((res) => res.json())
       .then((json) => {
         setTransactions(json)
@@ -17,6 +43,38 @@ export default function Home() {
         // Handle errors here
         console.error(e)
       })
+  }
+
+  function onChangeFilterKey(oldKey: keyof Transaction, newKey: keyof Transaction) {
+    delete filters[oldKey]
+    filters[newKey] = ''
+    setFilters({ ...filters })
+  }
+
+  function onChangeFilterValue(key: keyof Transaction, value: string) {
+    filters[key] = value
+    setFilters({ ...filters })
+  }
+
+  function onClickToRemoveFilter(key: keyof Transaction) {
+    delete filters[key]
+    setFilters({ ...filters })
+  }
+
+  function onChangeSortKey(oldKey: keyof Transaction, newKey: keyof Transaction) {
+    delete sort[oldKey]
+    sort[newKey] = 'asc'
+    setSort({ ...sort })
+  }
+
+  function onChangeSortOrder(key: keyof Transaction, order: 'asc' | 'desc') {
+    sort[key] = order
+    setSort({ ...sort })
+  }
+
+  function onClickToRemoveSort(key: keyof Transaction) {
+    delete sort[key]
+    setSort({ ...sort })
   }
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -55,12 +113,77 @@ export default function Home() {
         />
         <input type="submit" value="Upload" />
       </form>
+      <div>
+        <h3>Search</h3>
+        <input type="text" placeholder="Search" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <div>
+          <h3>Filters</h3>
+          {Object.entries(filters).map(([key, value], index) => (
+            <div key={key + index}>
+              <select
+                value={key}
+                onChange={e => onChangeFilterKey(key, e.target.value as keyof Transaction)}
+              >
+                {fieldsOfATransaction.map(field => (
+                  <option key={field} value={field}>{field}</option>
+                ))}
+              </select>
+              <input
+                value={value}
+                onChange={e => onChangeFilterValue(key as keyof Transaction, e.target.value)}
+              />
+              <button
+                onClick={() => onClickToRemoveFilter(key as keyof Transaction)}
+              >X</button>
+            </div>
+          ))}
+          <button
+            onClick={() => setFilters({ ...filters, [fieldsOfATransaction[0]]: '' })}
+          >+</button>
+        </div>
+        <div>
+          <h3>Sort</h3>
+          {Object.entries(sort).map(([key, value], index) => (
+            <div key={key + index}>
+              <select
+                value={key}
+                onChange={e => onChangeSortKey(key, e.target.value as keyof Transaction)}
+              >
+                {fieldsOfATransaction.map(field => (
+                  <option key={field} value={field}>{field}</option>
+                ))}
+              </select>
+              <select
+                value={sort[key].order}
+                onChange={e => onChangeSortOrder(key, e.target.value)}
+              >
+                {['asc', 'desc'].map(field => (
+                  <option key={field} value={field}>{field}</option>
+                ))}
+              </select>
+              <button
+                onClick={() => onClickToRemoveSort(key as keyof Transaction)}
+              >X</button>
+            </div>
+          ))}
+          <button
+            onClick={() => setSort({ ...sort, [fieldsOfATransaction[0]]: { value: '', order: 'asc' } })}
+          >+</button>
+        </div>
+        <button onClick={fetchTransactions}>
+          OK
+        </button>
+      </div>
       <table>
         <thead>
           <tr>
             <th>Date</th>
             <th>Amount</th>
             <th>Description</th>
+            <th>PaymentMethod</th>
+            <th>SourceDestination</th>
+            <th>UniqueIdentifier</th>
+            <th>Tags</th>
           </tr>
         </thead>
         <tbody>
@@ -69,6 +192,10 @@ export default function Home() {
               <td>{transaction.date.toString()}</td>
               <td>{transaction.amount.toString()}</td>
               <td>{transaction.description}</td>
+              <td>{transaction.paymentMethod}</td>
+              <td>{transaction.sourceDestination}</td>
+              <td>{transaction.uniqueIdentifier}</td>
+              <td>{transaction.tags}</td>
             </tr>
           ))}
         </tbody>

@@ -19,10 +19,19 @@ export async function GET(request: NextRequest) {
 
 	let where: Prisma.TransactionWhereInput = {}
 	if (search) {
-		where.description = { contains: search }
+		filters.description = { contains: search, mode: 'insensitive' }
 	}
 	if (filters.tags) {
-		where.tags = { some: { name: filters.tags as string } }
+		filters.tags = { some: { name: filters.tags as string } }
+	}
+	if (filters.date) {
+		const [year, month, day] = (filters.date as string).split('-')
+		const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
+		date.setHours(0, 0, 0, 0)
+		filters.date = {
+			gte: date,
+			lt: new Date(date.getTime() + 24 * 60 * 60 * 1000),
+		}
 	}
 	where = {
 		...where,

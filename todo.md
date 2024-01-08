@@ -4,13 +4,20 @@ Uso pessoal
 		- [X] destino
 		- [X] id: slug do user_id, data, descricao, valor
 		- [X] tags
+		- [X] front-end
 
 	- [X] Listagem de transactions
 		- [X] filtro por data, tag, forma, destino, tags, etc.
 		- [X] ordenação por data, valor, tag, etc.
-		- [ ] front-end
+		- [X] front-end
+
+	- [X] search case insensitive
+	
+	- [ ] make each field of the transactions table editable
 
 	- [ ] Testar com extrato pessoa física
+
+	- [ ] filter by date (range)
 
 	Meta de gastos por tag (planejamento)
 
