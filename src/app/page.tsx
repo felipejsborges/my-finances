@@ -1,7 +1,7 @@
 'use client'
 
-import { Transaction } from '@prisma/client'
-import { useEffect, useState } from 'react'
+import { PaymentMethod, Tag, Transaction } from '@prisma/client';
+import { useEffect, useState } from 'react';
 
 interface Filter {
   [key: keyof Transaction]: string
@@ -13,10 +13,12 @@ interface Sort {
 
 export default function Home() {
   const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [tags, setTags] = useState<Tag[]>([])
   const [file, setFile] = useState<File>()
   const [search, setSearch] = useState<string>('')
   const [filters, setFilters] = useState<Filter>({})
   const [sort, setSort] = useState<Sort>({})
+  const [modifiedTransactionsIds, setModifiedTransactionsIds] = useState<Number[]>([])
 
   const fieldsOfATransaction = transactions.length ? Object.keys(transactions[0]) : []
 
@@ -38,6 +40,18 @@ export default function Home() {
       .then((res) => res.json())
       .then((json) => {
         setTransactions(json)
+      })
+      .catch((e) => {
+        // Handle errors here
+        console.error(e)
+      })
+  }
+
+  function fetchTags() {
+    fetch(`/api/tags`)
+      .then((res) => res.json())
+      .then((json) => {
+        setTags(json)
       })
       .catch((e) => {
         // Handle errors here
@@ -77,7 +91,13 @@ export default function Home() {
     setSort({ ...sort })
   }
 
-  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  function onChangeTableItemValue(index: number, key: keyof Transaction, value: string) {
+    setModifiedTransactionsIds([...modifiedTransactionsIds, transactions[index].id])
+    transactions[index][key] = value
+    setTransactions([...transactions])
+  }
+
+  const onSubmitUpload = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!file) return
 
@@ -99,13 +119,33 @@ export default function Home() {
     }
   }
 
+  function onSaveTransactions() {
+    const transactionsToSave = transactions.filter(transaction => modifiedTransactionsIds.includes(transaction.id))
+    fetch('/api/transactions/bulk', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ transactions: transactionsToSave })
+    })
+      .then((res) => res.json())
+      .then(() => {
+        fetchTransactions()
+      })
+      .catch((e) => {
+        // Handle errors here
+        console.error(e)
+      })
+  }
+
   useEffect(() => {
     fetchTransactions()
+    fetchTags()
   }, [])
 
   return (
     <main>
-      <form onSubmit={onSubmit}>
+      <form onSubmit={onSubmitUpload}>
         <input
           type="file"
           name="file"
@@ -174,6 +214,11 @@ export default function Home() {
           OK
         </button>
       </div>
+      <div>
+        <button onClick={onSaveTransactions}>
+          Save
+        </button>
+      </div>
       <table>
         <thead>
           <tr>
@@ -182,20 +227,80 @@ export default function Home() {
             <th>Description</th>
             <th>PaymentMethod</th>
             <th>SourceDestination</th>
-            <th>UniqueIdentifier</th>
             <th>Tags</th>
           </tr>
         </thead>
         <tbody>
-          {transactions.map((transaction) => (
+          {transactions.map((transaction, index) => (
             <tr key={transaction.id}>
-              <td>{transaction.date.toString()}</td>
-              <td>{transaction.amount.toString()}</td>
-              <td>{transaction.description}</td>
-              <td>{transaction.paymentMethod}</td>
-              <td>{transaction.sourceDestination}</td>
-              <td>{transaction.uniqueIdentifier}</td>
-              <td>{transaction.tags}</td>
+              <td>
+                <input
+                  value={transaction.date.toString()}
+                  onChange={e => onChangeTableItemValue(
+                    index,
+                    'date',
+                    e.target.value
+                  )}
+                />
+              </td>
+              <td>
+                <input
+                  value={transaction.amount.toString()}
+                  onChange={e => onChangeTableItemValue(
+                    index,
+                    'amount',
+                    e.target.value
+                  )}
+                />
+              </td>
+              <td>
+                <input
+                  value={transaction.description}
+                  onChange={e => onChangeTableItemValue(
+                    index,
+                    'description',
+                    e.target.value
+                  )}
+                />
+              </td>
+              <td>
+                <select
+                  value={transaction.paymentMethod}
+                  onChange={e => onChangeTableItemValue(
+                    index,
+                    'paymentMethod',
+                    e.target.value
+                  )}
+                >
+                  {[...[""], ...Object.values(PaymentMethod || [])].map(paymentMethod => (
+                    <option key={paymentMethod} value={paymentMethod}>{paymentMethod}</option>
+                  ))}
+                </select>
+              </td>
+              <td>
+                <input
+                  value={transaction.sourceDestination}
+                  onChange={e => onChangeTableItemValue(
+                    index,
+                    'sourceDestination',
+                    e.target.value
+                  )}
+                />
+              </td>
+              <td>
+                <select
+                  value={transaction.tags?.length ? transaction.tags[0].id : ""}
+                  onChange={e => onChangeTableItemValue(
+                    index,
+                    'tags',
+                    [{ id: e.target.value }]
+                  )}
+                >
+                  {[[{ id: "", name: "" }], ...tags].map(tag => (
+                    <option key={tag.id} value={tag.id}>{tag.name}</option>
+                  ))}
+                </select>
+              </td>
             </tr>
           ))}
         </tbody>

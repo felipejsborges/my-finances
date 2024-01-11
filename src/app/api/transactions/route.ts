@@ -38,7 +38,9 @@ export async function GET(request: NextRequest) {
 		...filters,
 	}
 
-	const orderBy: Prisma.TransactionOrderByWithAggregationInput[] = []
+	const orderBy: Prisma.TransactionOrderByWithAggregationInput[] = [{
+		date: 'desc',
+	}]
 	if (sort) {
 		const sortItems = sort.split(',')
 		sortItems.forEach((sortItem: any) => {

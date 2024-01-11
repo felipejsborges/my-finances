@@ -13,7 +13,9 @@ Uso pessoal
 
 	- [X] search case insensitive
 	
-	- [ ] make each field of the transactions table editable
+	- [X] make each field of the transactions table editable
+
+	- [ ] UI
 
 	- [ ] Testar com extrato pessoa física
 
