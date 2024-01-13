@@ -15,24 +15,33 @@ Uso pessoal
 	
 	- [X] make each field of the transactions table editable
 
+	- [ ] add field: income/outcome
+
 	- [ ] UI
+		- [ ] lib de componentes
+		- [ ] lib de icons
+		- telas: listagem, home (resumo).
 
 	- [ ] Testar com extrato pessoa física
 
+	- [ ] possibilitar excluir transactions (sozinha ou várias de uma vez)
+
 	- [ ] filter by date (range)
+
+	Gráfico de pizza com % de gasto por tag (Real)
+
+	Gráfico de pizza com % de gasto por tag (Meta)
 
 	Meta de gastos por tag (planejamento)
 
 	Barra de progressão em % de gasto / planejado
 
-	Gráfico de pizza com % de gasto por tag
-		- Meta
-		- Real
-
 	Gráfico de linha com receitas por mês
 
 MVP
 	definir tags padrão: alimentação, transporte, saúde, lazer, educação, moradia, outros
+	cadastro, login, recuperar senha, etc.
+	sem login: tela de trial
 
 V2 (consultar anotacões físicas):
 	Extrato do cartão
